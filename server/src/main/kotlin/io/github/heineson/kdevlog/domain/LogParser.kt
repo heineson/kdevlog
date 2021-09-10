@@ -1,63 +1,38 @@
 package io.github.heineson.kdevlog.domain
 
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
+import java.time.Year
+import java.time.format.DateTimeFormatterBuilder
+import java.time.format.DateTimeParseException
+import java.time.temporal.ChronoField
 
-enum class LogEntryType { TIMESTAMP, DATE, TIME, LEVEL, MESSAGE, OTHER }
 
 data class LogEntry(val timestamp: LocalDateTime, val level: String, val message: String)
-data class TimeFormats(val dateFormat: String = "yyyy-MM-dd", val timeFormat: String = "HH:mm:ss,SSS", val timestampFormat: String = "yyyy-MM-ddTHH:mm:ss,SSS")
-
-/**
- * Assumes TIMESTAMP is present and that MESSAGE is last
- */
-fun parseEntryWithTokenization(
-    entry: String,
-    tokenOrder: List<LogEntryType>,
-    tokenSeparator: String = " ",
-    timeFormats: TimeFormats = TimeFormats()
-): Result<LogEntry> {
-    val tokens = entry.split(tokenSeparator, limit = tokenOrder.size)
-    if (tokens.size < tokenOrder.size) {
-        return Result.failure(IllegalArgumentException("Number of tokens (${tokens.size}) less than number of expected values (${tokenOrder.size})"))
-    }
-    val tokensWithType = tokens.zip(tokenOrder)
-    val timestamp = parseTimestampToken(tokensWithType.filter { it.second in listOf(LogEntryType.TIMESTAMP, LogEntryType.DATE, LogEntryType.TIME) }, timeFormats)
-        ?: return Result.failure(IllegalArgumentException("No timestamp data could be found in the entry"))
-
-    return Result.success(LogEntry(
-        timestamp,
-        tokensWithType.find { it.second == LogEntryType.LEVEL }?.first ?: "",
-        tokensWithType.find { it.second == LogEntryType.MESSAGE }?.first ?: ""
-    ))
-}
 
 /**
  * Parses a line with regex
  */
-fun parseEntryWithRegex() {
-
+fun parseEntry(entry: String, config: LogConfig): Result<LogEntry> {
+    return config.toRegex().matchEntire(entry)?.groups?.let {
+        val ts = it["timestamp"]?.value
+            ?.let { v -> parseTimestamp(v, config.timestampFormat) }
+            ?.getOrElse { x -> return@let Result.failure(x) }
+            ?: return Result.failure(IllegalArgumentException("Could not parse timestamp"))
+        val level = if (config.pattern.contains("<level>")) it["level"]?.value ?: "" else ""
+        val body = it["message"]?.value ?: return Result.failure(IllegalArgumentException("Could not find message body"))
+        Result.success(LogEntry(ts, level, body))
+    } ?: Result.failure(IllegalArgumentException("Could not parse log entry"))
 }
 
-fun parseTimestampToken(tokens: List<Pair<String, LogEntryType>>, timeFormats: TimeFormats): LocalDateTime? {
-    val typeToToken = tokens.associate { it.second to it.first }
-
-    return when {
-        typeToToken.containsKey(LogEntryType.TIMESTAMP) ->
-            LocalDateTime.parse(
-                typeToToken[LogEntryType.TIMESTAMP],
-                DateTimeFormatter.ofPattern(timeFormats.timestampFormat))
-        typeToToken.containsKey(LogEntryType.DATE) && typeToToken.containsKey(LogEntryType.TIME) -> {
-            val date = LocalDate.parse(
-                typeToToken[LogEntryType.DATE],
-                DateTimeFormatter.ofPattern(timeFormats.dateFormat))
-            val time = LocalTime.parse(
-                typeToToken[LogEntryType.TIME],
-                DateTimeFormatter.ofPattern(timeFormats.timeFormat))
-            LocalDateTime.of(date, time)
-        }
-        else -> null
+// TODO this is probably expensive as a formatter is re-created for each line
+private fun parseTimestamp(token: String, format: String): Result<LocalDateTime> {
+    return try {
+        val formatter = DateTimeFormatterBuilder()
+            .appendPattern(format)
+            .parseDefaulting(ChronoField.YEAR, Year.now().value.toLong()) // Some timestamps do not have year
+            .toFormatter()
+        Result.success(LocalDateTime.parse(token, formatter))
+    } catch (e: DateTimeParseException) {
+        Result.failure(e)
     }
 }
