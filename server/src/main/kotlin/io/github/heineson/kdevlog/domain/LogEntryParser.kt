@@ -12,7 +12,7 @@ data class LogEntry(val timestamp: LocalDateTime, val level: String, val message
 /**
  * Parses a line with regex
  */
-fun parseEntry(entry: String, config: LogConfig): Result<LogEntry> {
+fun parseEntry(entry: String, config: LogFormat): Result<LogEntry> {
     return config.toRegex().matchEntire(entry)?.groups?.let {
         val ts = it["timestamp"]?.value
             ?.let { v -> parseTimestamp(v, config.timestampFormat) }

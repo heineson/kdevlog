@@ -1,6 +1,6 @@
 package io.github.heineson.kdevlog.domain
 
-data class LogConfig(
+data class LogFormat(
     val name: String,
     val pattern: String,
     val multiline: Boolean = false,
@@ -12,7 +12,7 @@ data class LogConfig(
     }
 }
 
-val SYSLOG_CONFIG = LogConfig(
+val SYSLOG_CONFIG = LogFormat(
     "syslog",
     "(?<timestamp>\\S+\\s+[0-9]{1,2}\\s+[0-9]+:[0-9]+:[0-9]+)\\s+(?<hostname>\\S+)\\s+(?<daemon>\\S+)(?<pid>\\[[0-9]+\\]):\\s+(?<message>.*)\\s*",
     timestampFormat = "MMM ppd HH:mm:ss"
