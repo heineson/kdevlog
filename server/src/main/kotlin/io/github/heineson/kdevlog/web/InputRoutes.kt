@@ -20,17 +20,19 @@ fun Application.inputRoutes() {
             post {
                 val file = call.receive<File>()
                 if (Path.of(file.uri).notExists() || !Path.of(file.uri).isRegularFile()) {
-                    call.respond(HttpStatusCode.BadRequest, "No file found for: ${file.uri}")
+                    return@post call.respond(HttpStatusCode.BadRequest, "No file found for: ${file.uri}")
                 }
-                InputStore.save(InputEntity(UUID.randomUUID().toString(), InputType.FILE))
-                call.respond(HttpStatusCode.Created)
+                val id = UUID.randomUUID().toString()
+                InputStore.save(InputEntity(id, InputType.FILE, file.uri))
+                call.respond(HttpStatusCode.Created, file.copy(id = id))
             }
             delete("{id}") {
-
+                val id = call.parameters["id"] ?: return@delete call.respond(HttpStatusCode.BadRequest)
+                call.respond(if (InputStore.delete(id) == null) HttpStatusCode.NotFound else HttpStatusCode.NoContent)
             }
         }
     }
 }
 
 @Serializable
-data class File(val uri: String)
+data class File(val uri: String, val id: String? = null)
