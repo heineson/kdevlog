@@ -17,6 +17,15 @@ import kotlin.io.path.notExists
 fun Application.inputRoutes() {
     routing {
         route("/inputs/files") {
+            get {
+                call.respond(InputStore.getAll().map { File(it.value, it.id) })
+            }
+            get("{id}") {
+                val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+                val entity = InputStore.get(id)?.let { File(it.value, it.id) }
+                if (entity == null) call.respond(HttpStatusCode.NotFound) else call.respond(entity)
+            }
+
             post {
                 val file = call.receive<File>()
                 if (Path.of(file.uri).notExists() || !Path.of(file.uri).isRegularFile()) {
@@ -26,6 +35,7 @@ fun Application.inputRoutes() {
                 InputStore.save(InputEntity(id, InputType.FILE, file.uri))
                 call.respond(HttpStatusCode.Created, file.copy(id = id))
             }
+
             delete("{id}") {
                 val id = call.parameters["id"] ?: return@delete call.respond(HttpStatusCode.BadRequest)
                 call.respond(if (InputStore.delete(id) == null) HttpStatusCode.NotFound else HttpStatusCode.NoContent)

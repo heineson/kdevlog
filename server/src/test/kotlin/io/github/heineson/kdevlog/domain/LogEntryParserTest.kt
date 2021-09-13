@@ -1,7 +1,7 @@
 package io.github.heineson.kdevlog.domain
 
+import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
-import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
