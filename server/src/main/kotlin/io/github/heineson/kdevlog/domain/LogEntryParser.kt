@@ -1,13 +1,12 @@
 package io.github.heineson.kdevlog.domain
 
-import java.time.LocalDateTime
-import java.time.Year
+import java.time.*
 import java.time.format.DateTimeFormatterBuilder
 import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoField
 
 
-data class LogEntry(val timestamp: LocalDateTime, val level: String, val message: String)
+data class LogEntry(val timestamp: Instant, val level: String, val message: String)
 
 /**
  * Parses a line with regex
@@ -25,13 +24,14 @@ fun parseEntry(entry: String, config: LogFormat): Result<LogEntry> {
 }
 
 // TODO this is probably expensive as a formatter is re-created for each line
-private fun parseTimestamp(token: String, format: String): Result<LocalDateTime> {
+private fun parseTimestamp(token: String, format: String): Result<Instant> {
+    val localZoneOffset = OffsetDateTime.now().offset
     return try {
         val formatter = DateTimeFormatterBuilder()
             .appendPattern(format)
             .parseDefaulting(ChronoField.YEAR, Year.now().value.toLong()) // Some timestamps do not have year
             .toFormatter()
-        Result.success(LocalDateTime.parse(token, formatter))
+        Result.success(LocalDateTime.parse(token, formatter).toInstant(localZoneOffset))
     } catch (e: DateTimeParseException) {
         Result.failure(e)
     }
