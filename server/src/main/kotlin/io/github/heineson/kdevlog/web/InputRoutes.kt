@@ -22,8 +22,8 @@ fun Application.inputRoutes() {
             }
             get("{id}") {
                 val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
-                val entity = InputStore.get(id)?.let { File(it.value, it.id) }
-                if (entity == null) call.respond(HttpStatusCode.NotFound) else call.respond(entity)
+                InputStore.get(id)?.let { call.respond(File(it.value, it.id)) }
+                    ?: call.respond(HttpStatusCode.NotFound)
             }
 
             post {
