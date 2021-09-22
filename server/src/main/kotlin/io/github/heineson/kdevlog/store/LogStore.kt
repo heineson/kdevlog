@@ -8,6 +8,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.`java-time`.timestamp
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.time.Instant
 
 object LogStore : Store<LogEntryEntity> {
     private val log = KotlinLogging.logger {}
@@ -25,7 +26,14 @@ object LogStore : Store<LogEntryEntity> {
     }
 
     override fun saveAll(entities: Collection<LogEntryEntity>) {
-        TODO("Not yet implemented")
+        transaction {
+            Logs.batchInsert(entities.filter { it.id == null }) {
+                this[Logs.timestamp] = it.entryData.timestamp
+                this[Logs.level] = it.entryData.level
+                this[Logs.message] = it.entryData.message
+                this[Logs.sourceInputId] = it.sourceInputId
+            }
+        }
     }
 
     override fun save(entity: LogEntryEntity): LogEntryEntity {
@@ -55,11 +63,29 @@ object LogStore : Store<LogEntryEntity> {
         }
     }
 
+    fun getSome(filters: Filters = Filters()): List<LogEntryEntity> {
+        val q = Logs.selectAll()
+        filters.from?.let { q.andWhere { Logs.timestamp greaterEq it } }
+        filters.to?.let { q.andWhere { Logs.timestamp lessEq it } }
+        q.orderBy(Logs.timestamp to SortOrder.DESC).limit(filters.limit, offset = filters.offset)
+
+        return transaction {
+            q.map(toEntity())
+        }
+    }
+
     override fun delete(id: String): LogEntryEntity? {
         transaction {
             Logs.deleteWhere { Logs.id eq id.toInt() }
         }
         return null
+    }
+
+    fun clear() {
+        val count = transaction {
+            Logs.deleteAll()
+        }
+        log.info { "Logs table cleared, $count entries removed" }
     }
 
     private fun toEntity(): (ResultRow) -> LogEntryEntity =
@@ -74,6 +100,8 @@ object LogStore : Store<LogEntryEntity> {
 }
 
 data class LogEntryEntity(val sourceInputId: String, val entryData: LogEntry, val id: String? = null)
+
+data class Filters(val offset: Long = 0, val limit: Int = 1000, val from: Instant? = null, val to: Instant? = null)
 
 private object Logs : IntIdTable() {
     val timestamp = timestamp("timestamp")
