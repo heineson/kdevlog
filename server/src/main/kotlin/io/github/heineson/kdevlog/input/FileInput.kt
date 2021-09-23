@@ -8,13 +8,13 @@ import kotlin.io.path.exists
 import kotlin.io.path.isReadable
 import kotlin.io.path.name
 
-class FileInput(val file: Path, val cb: (entry: String) -> Unit) : AutoCloseable {
+class FileInput(private val file: Path, private val cb: (entry: String) -> Unit) : Input {
     private val log = KotlinLogging.logger {}
 
     private lateinit var listener: FileTailListener
     private lateinit var tailer: Tailer
 
-    fun start() {
+    override fun start() {
         if (file.exists() && file.isReadable()) {
             listener = FileTailListener(file.name, cb)
             tailer = Tailer.create(file.toFile(), listener)
