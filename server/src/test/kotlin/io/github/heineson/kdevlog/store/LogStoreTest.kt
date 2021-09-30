@@ -10,7 +10,7 @@ import kotlin.test.*
 internal class LogStoreTest {
     @AfterEach
     fun reset() {
-        LogStore.clear()
+        LogStore().clear()
     }
 
     @Test
@@ -19,56 +19,65 @@ internal class LogStoreTest {
             LogEntryEntity("source", LogEntry(Instant.now().truncatedTo(ChronoUnit.MILLIS), "WARN", "log message"))
         assertNull(entity.id)
 
-        // create
-        val stored = LogStore.save(entity)
-        assertNotNull(stored.id)
+        with(LogStore()) {
+            // create
+            val stored = save(entity)
+            assertNotNull(stored.id)
 
-        // read
-        val read = LogStore.get(stored.id!!)
-        read?.let {
-            assertEquals("source", it.sourceInputId)
-            assertEquals("WARN", it.entryData.level)
-            assertEquals(entity.entryData.timestamp, it.entryData.timestamp)
-        } ?: fail("Read should not return null")
+            // read
+            val read = get(stored.id!!)
+            read?.let {
+                assertEquals("source", it.sourceInputId)
+                assertEquals("WARN", it.entryData.level)
+                assertEquals(entity.entryData.timestamp, it.entryData.timestamp)
+            } ?: fail("Read should not return null")
 
-        // update - no update, log entries are immutable
-        try {
-            LogStore.save(stored)
-            fail("Should not be able to save an already stored entry")
-        } catch (e: Exception) {
-            assertTrue(e is IllegalArgumentException)
+            // update - no update, log entries are immutable
+            try {
+                save(stored)
+                fail("Should not be able to save an already stored entry")
+            } catch (e: Exception) {
+                assertTrue(e is IllegalArgumentException)
+            }
+            assertEquals(1, getAll().size)
+
+            // delete
+            stored.id?.let { delete(it) }
+            assertNull(get(stored.id!!))
+            assertEquals(0, getAll().size)
         }
-        assertEquals(1, LogStore.getAll().size)
-
-        // delete
-        stored.id?.let { LogStore.delete(it) }
-        assertNull(LogStore.get(stored.id!!))
-        assertEquals(0, LogStore.getAll().size)
     }
 
     @Test
     fun getLogsWithOffsetAndLimit() {
-        addLogEntries()
+        with(LogStore()) {
+            addLogEntries(this)
 
-        val logs = LogStore.getSome(Filters(2, 2)).map { it.entryData }
-        assertEquals(2, logs.size)
-        assertEquals(LogEntry(Instant.ofEpochMilli(1632256718758), "INFO", "log message 2"), logs[0])
-        assertEquals(LogEntry(Instant.ofEpochMilli(1632256718748), "WARN", "log message 1"), logs[1])
+            val logs = getSome(Filters(2, 2)).map { it.entryData }
+            assertEquals(2, logs.size)
+            assertEquals(LogEntry(Instant.ofEpochMilli(1632256718758), "INFO", "log message 2"), logs[0])
+            assertEquals(LogEntry(Instant.ofEpochMilli(1632256718748), "WARN", "log message 1"), logs[1])
+        }
     }
 
     @Test
     fun getLogsWithTimeLimit() {
-        addLogEntries()
+        with(LogStore()) {
+            addLogEntries(this)
 
-        val logs = LogStore.getSome(Filters(from = Instant.ofEpochMilli(1632256718748), to = Instant.ofEpochMilli(1632256718759)))
-            .map { it.entryData }
-        assertEquals(3, logs.size)
-        assertEquals(LogEntry(Instant.ofEpochMilli(1632256718759), "ERROR", "log message 5"), logs[0])
-        assertEquals(LogEntry(Instant.ofEpochMilli(1632256718758), "INFO", "log message 2"), logs[1])
-        assertEquals(LogEntry(Instant.ofEpochMilli(1632256718748), "WARN", "log message 1"), logs[2])
+            val filters = Filters(
+                from = Instant.ofEpochMilli(1632256718748),
+                to = Instant.ofEpochMilli(1632256718759)
+            )
+            val logs = getSome(filters).map { it.entryData }
+            assertEquals(3, logs.size)
+            assertEquals(LogEntry(Instant.ofEpochMilli(1632256718759), "ERROR", "log message 5"), logs[0])
+            assertEquals(LogEntry(Instant.ofEpochMilli(1632256718758), "INFO", "log message 2"), logs[1])
+            assertEquals(LogEntry(Instant.ofEpochMilli(1632256718748), "WARN", "log message 1"), logs[2])
+        }
     }
 
-    private fun addLogEntries() {
+    private fun addLogEntries(logStore: LogStore) {
         val entities = listOf(
             LogEntryEntity("source1", LogEntry(Instant.ofEpochMilli(1632256718748), "WARN", "log message 1")),
             LogEntryEntity("source1", LogEntry(Instant.ofEpochMilli(1632256718758), "INFO", "log message 2")),
@@ -76,7 +85,7 @@ internal class LogStoreTest {
             LogEntryEntity("source2", LogEntry(Instant.ofEpochMilli(1632256718747), "WARN", "log message 4")),
             LogEntryEntity("source2", LogEntry(Instant.ofEpochMilli(1632256718759), "ERROR", "log message 5")),
         )
-        LogStore.saveAll(entities)
-        assertEquals(5, LogStore.getAll().size)
+        logStore.saveAll(entities)
+        assertEquals(5, logStore.getAll().size)
     }
 }

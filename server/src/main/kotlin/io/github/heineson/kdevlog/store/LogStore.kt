@@ -10,7 +10,7 @@ import org.jetbrains.exposed.sql.`java-time`.timestamp
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Instant
 
-object LogStore : Store<LogEntryEntity> {
+class LogStore : Store<LogEntryEntity> {
     private val log = KotlinLogging.logger {}
 
     init {

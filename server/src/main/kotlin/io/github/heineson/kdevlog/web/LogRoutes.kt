@@ -7,6 +7,9 @@ import io.ktor.application.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import kotlinx.serialization.Serializable
+import org.kodein.di.instance
+import org.kodein.di.ktor.closestDI
+import org.kodein.di.ktor.di
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -24,7 +27,8 @@ fun Application.logRoutes() {
                 val offset = call.request.queryParameters["offset"]?.toLongOrNull() ?: 0
 
                 val f = Filters(offset, count, from, to)
-                val data: List<Log> = LogStore.getSome(f).map { it.toLog() }
+                val logStore by call.closestDI().instance<LogStore>()
+                val data: List<Log> = logStore.getSome(f).map { it.toLog() }
 
                 call.respond(data)
             }

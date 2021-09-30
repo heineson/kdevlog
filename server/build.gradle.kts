@@ -10,6 +10,7 @@ version = "0.1"
 val commonsIoVersion = "2.11.0"
 val exposedVersion = "0.34.2"
 val hikariCpVersion = "4.0.3"
+val kodeinVersion = "7.8.0"
 val kotlinLoggingVersion = "2.0.11"
 val ktorVersion = "1.6.3"
 val logbackVersion = "1.2.5"
@@ -30,6 +31,7 @@ dependencies {
     implementation("io.ktor:ktor-server-core:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("io.ktor:ktor-serialization:$ktorVersion")
+    implementation("org.kodein.di:kodein-di-framework-ktor-server-jvm:$kodeinVersion")
 
     // Logging
     implementation("io.github.microutils:kotlin-logging-jvm:$kotlinLoggingVersion")
