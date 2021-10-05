@@ -8,13 +8,13 @@ import kotlin.io.path.exists
 import kotlin.io.path.isReadable
 import kotlin.io.path.name
 
-class FileInput(private val file: Path, private val cb: (entry: String) -> Unit) : Input {
+class FileInput(private val file: Path) : Input {
     private val log = KotlinLogging.logger {}
 
     private lateinit var listener: FileTailListener
     private lateinit var tailer: Tailer
 
-    override fun start() {
+    override fun start(cb: (entry: String) -> Unit) {
         if (file.exists() && file.isReadable()) {
             listener = FileTailListener(file.name, cb)
             tailer = Tailer.create(file.toFile(), listener)

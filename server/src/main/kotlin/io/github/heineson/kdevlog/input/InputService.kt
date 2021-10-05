@@ -1,6 +1,5 @@
 package io.github.heineson.kdevlog.input
 
-import io.github.heineson.kdevlog.domain.LogEntry
 import io.github.heineson.kdevlog.domain.SYSLOG_CONFIG
 import io.github.heineson.kdevlog.domain.parseEntry
 import io.github.heineson.kdevlog.store.*
@@ -16,10 +15,10 @@ class InputService(private val inputStore: InputStore, private val logStore: Log
         val stored = inputStore.save(source)
 
         val input: Input = when (source.type) {
-            InputType.FILE -> FileInput(Path.of(source.value)) { inputEntryHandler(stored)(it) }
+            InputType.FILE -> FileInput(Path.of(source.value))
         }
         inputInstances[stored.id] = input
-        input.start()
+        input.start(inputEntryHandler(stored))
         return stored.id
     }
 
@@ -32,13 +31,6 @@ class InputService(private val inputStore: InputStore, private val logStore: Log
         inputStore.getAll().forEach { stopAndRemoveInput(it.id) }
     }
 
-    private fun inputEntryHandler(stored: InputEntity): (String) -> () -> Result<LogEntry> {
-        val inputHandler = { line: String ->
-            {
-                // TODO find config automatically based on the first few lines received?
-                parseEntry(line, SYSLOG_CONFIG).onSuccess { logStore.save(LogEntryEntity(stored.id, it)) }
-            }
-        }
-        return inputHandler
-    }
+    private fun inputEntryHandler(stored: InputEntity): (entry: String) -> Unit =
+        { line -> parseEntry(line, SYSLOG_CONFIG).onSuccess { logStore.save(LogEntryEntity(stored.id, it)) } }
 }

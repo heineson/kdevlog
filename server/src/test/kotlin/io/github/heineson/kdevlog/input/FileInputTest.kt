@@ -34,8 +34,8 @@ internal class FileInputTest {
     @Timeout(30)
     fun testTailWithAppend() {
         val result = mutableListOf<String>()
-        FileInput(tempLogFile) { result.add(it) }.use {
-            it.start()
+        FileInput(tempLogFile).use {
+            it.start { line -> result.add(line) }
             while (result.size != 6) {
                 Thread.sleep(10)
             }
