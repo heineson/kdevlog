@@ -2,6 +2,7 @@ package io.github.heineson.kdevlog.input
 
 import io.github.heineson.kdevlog.domain.SYSLOG_CONFIG
 import io.github.heineson.kdevlog.domain.parseEntry
+import io.github.heineson.kdevlog.model.Input
 import io.github.heineson.kdevlog.store.*
 import mu.KotlinLogging
 import java.util.concurrent.ConcurrentHashMap
@@ -10,15 +11,15 @@ class InputService(private val inputStore: InputStore, private val logStore: Log
     private val logReaderInstances = ConcurrentHashMap<String, LogReader>() // TODO remove state from here
     private val log = KotlinLogging.logger {}
 
-    fun addInput(source: InputEntity): InputEntity {
+    fun addInput(source: Input): Input {
         return inputStore.save(source)
     }
 
-    fun startInput(inputEntity: InputEntity) {
-        val input: LogReader = LogReader.of(inputEntity)
-        logReaderInstances[inputEntity.id] = input
-        input.start(inputEntryHandler(inputEntity))
-        log.info { "Started input ${inputEntity.id}" }
+    fun startInput(input: Input) {
+        val reader: LogReader = LogReader.of(input)
+        logReaderInstances[input.id] = reader
+        reader.start(inputEntryHandler(input))
+        log.info { "Started input ${input.id}" }
     }
 
     fun removeInput(id: String) {
@@ -30,6 +31,6 @@ class InputService(private val inputStore: InputStore, private val logStore: Log
         inputStore.getAll().forEach { removeInput(it.id) }
     }
 
-    private fun inputEntryHandler(stored: InputEntity): (entry: String) -> Unit =
+    private fun inputEntryHandler(stored: Input): (entry: String) -> Unit =
         { line -> parseEntry(line, SYSLOG_CONFIG).onSuccess { logStore.save(LogEntryEntity(stored.id, it)) } }
 }

@@ -1,8 +1,8 @@
 package io.github.heineson.kdevlog.web
 
-import io.github.heineson.kdevlog.store.InputEntity
+import io.github.heineson.kdevlog.model.Input
 import io.github.heineson.kdevlog.store.InputStore
-import io.github.heineson.kdevlog.store.InputType
+import io.github.heineson.kdevlog.model.InputType
 import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.request.*
@@ -36,7 +36,7 @@ fun Application.inputRoutes() {
                     return@post call.respond(HttpStatusCode.BadRequest, "No file found for: ${input.value}")
                 }
                 val id = UUID.randomUUID().toString()
-                inputStore.save(InputEntity(id, InputType.FILE, input.value))
+                inputStore.save(Input(id, InputType.FILE, input.value))
                 call.respond(HttpStatusCode.Created, input.copy(id = id))
             }
 
@@ -57,4 +57,4 @@ data class JsonInput(val value: String, val type: InputType, val id: String? = n
     }
 }
 
-fun InputEntity.toJsonInput() = JsonInput(this.value, this.type, this.id)
+fun Input.toJsonInput() = JsonInput(this.value, this.type, this.id)

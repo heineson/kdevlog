@@ -1,23 +1,21 @@
 package io.github.heineson.kdevlog.store
 
+import io.github.heineson.kdevlog.model.Input
 import java.util.concurrent.ConcurrentHashMap
 
-class InputStore : Store<InputEntity> {
-    private val store = ConcurrentHashMap<String, InputEntity>()
+class InputStore : Store<Input> {
+    private val store = ConcurrentHashMap<String, Input>()
 
-    override fun saveAll(entities: Collection<InputEntity>) = store.putAll(entities.map { Pair(it.id, it) })
+    override fun saveAll(entities: Collection<Input>) = store.putAll(entities.map { Pair(it.id, it) })
 
-    override fun save(entity: InputEntity): InputEntity {
+    override fun save(entity: Input): Input {
         store[entity.id] = entity
         return entity
     }
 
-    override fun getAll(): List<InputEntity> = store.values.toList()
+    override fun getAll(): List<Input> = store.values.toList()
 
-    override fun get(id: String): InputEntity? = store[id]
+    override fun get(id: String): Input? = store[id]
 
-    override fun delete(id: String): InputEntity? = store.remove(id)
+    override fun delete(id: String): Input? = store.remove(id)
 }
-
-enum class InputType { FILE }
-data class InputEntity(val id: String, val type: InputType, val value: String)
