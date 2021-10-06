@@ -8,7 +8,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.isReadable
 import kotlin.io.path.name
 
-class FileInput(private val file: Path) : Input() {
+class FileLogReader(private val file: Path) : LogReader() {
     private val log = KotlinLogging.logger {}
 
     private lateinit var listener: FileTailListener

@@ -7,7 +7,7 @@ import mu.KotlinLogging
 import java.util.concurrent.ConcurrentHashMap
 
 class InputService(private val inputStore: InputStore, private val logStore: LogStore) {
-    private val inputInstances = ConcurrentHashMap<String, Input>() // TODO remove state from here
+    private val logReaderInstances = ConcurrentHashMap<String, LogReader>() // TODO remove state from here
     private val log = KotlinLogging.logger {}
 
     fun addInput(source: InputEntity): InputEntity {
@@ -15,15 +15,15 @@ class InputService(private val inputStore: InputStore, private val logStore: Log
     }
 
     fun startInput(inputEntity: InputEntity) {
-        val input: Input = Input.of(inputEntity)
-        inputInstances[inputEntity.id] = input
+        val input: LogReader = LogReader.of(inputEntity)
+        logReaderInstances[inputEntity.id] = input
         input.start(inputEntryHandler(inputEntity))
         log.info { "Started input ${inputEntity.id}" }
     }
 
     fun removeInput(id: String) {
         inputStore.delete(id)
-        inputInstances.remove(id)?.close()
+        logReaderInstances.remove(id)?.close()
     }
 
     fun removeAll() {

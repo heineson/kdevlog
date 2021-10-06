@@ -4,13 +4,12 @@ import io.github.heineson.kdevlog.store.InputEntity
 import io.github.heineson.kdevlog.store.InputType
 import java.nio.file.Path
 
-sealed class Input {
+sealed class LogReader : AutoCloseable {
     abstract fun start(cb: (entry: String) -> Unit)
-    abstract fun close()
 
     companion object {
-        fun of(model: InputEntity): Input = when (model.type) {
-            InputType.FILE -> FileInput(Path.of(model.value))
+        fun of(model: InputEntity): LogReader = when (model.type) {
+            InputType.FILE -> FileLogReader(Path.of(model.value))
         }
     }
 }

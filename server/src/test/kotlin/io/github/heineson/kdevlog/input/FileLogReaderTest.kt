@@ -12,7 +12,7 @@ import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
 
-internal class FileInputTest {
+internal class FileLogReaderTest {
     private lateinit var tempLogFile: Path
 
     @BeforeEach
@@ -34,7 +34,7 @@ internal class FileInputTest {
     @Timeout(30)
     fun testTailWithAppend() {
         val result = mutableListOf<String>()
-        FileInput(tempLogFile).use {
+        FileLogReader(tempLogFile).use {
             it.start { line -> result.add(line) }
             while (result.size != 6) {
                 Thread.sleep(10)
