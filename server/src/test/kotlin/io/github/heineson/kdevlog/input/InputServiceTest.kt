@@ -9,12 +9,4 @@ internal class InputServiceTest {
         // TODO wip
     }
 
-    class TestInput: Input {
-        override fun start(cb: (entry: String) -> Unit) {
-        }
-
-        override fun close() {
-        }
-
-    }
 }
