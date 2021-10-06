@@ -13,31 +13,31 @@ import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
 import java.nio.file.Path
 import java.util.*
+import kotlin.io.path.exists
 import kotlin.io.path.isRegularFile
-import kotlin.io.path.notExists
 
 fun Application.inputRoutes() {
     routing {
-        route("/inputs/files") {
+        route("/inputs") {
             val inputStore by closestDI().instance<InputStore>()
 
             get {
-                call.respond(inputStore.getAll().map { File(it.value, it.id) })
+                call.respond(inputStore.getAll().map { it.toJsonInput() })
             }
             get("{id}") {
                 val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
-                inputStore.get(id)?.let { call.respond(File(it.value, it.id)) }
+                inputStore.get(id)?.let { call.respond(it.toJsonInput()) }
                     ?: call.respond(HttpStatusCode.NotFound)
             }
 
             post {
-                val file = call.receive<File>()
-                if (Path.of(file.uri).notExists() || !Path.of(file.uri).isRegularFile()) {
-                    return@post call.respond(HttpStatusCode.BadRequest, "No file found for: ${file.uri}")
+                val input = call.receive<JsonInput>()
+                if (!input.validate()) {
+                    return@post call.respond(HttpStatusCode.BadRequest, "No file found for: ${input.value}")
                 }
                 val id = UUID.randomUUID().toString()
-                inputStore.save(InputEntity(id, InputType.FILE, file.uri))
-                call.respond(HttpStatusCode.Created, file.copy(id = id))
+                inputStore.save(InputEntity(id, InputType.FILE, input.value))
+                call.respond(HttpStatusCode.Created, input.copy(id = id))
             }
 
             delete("{id}") {
@@ -49,4 +49,12 @@ fun Application.inputRoutes() {
 }
 
 @Serializable
-data class File(val uri: String, val id: String? = null)
+data class JsonInput(val value: String, val type: InputType, val id: String? = null) {
+    fun validate(): Boolean {
+        return when (type) {
+            InputType.FILE -> Path.of(value).exists() && Path.of(value).isRegularFile()
+        }
+    }
+}
+
+fun InputEntity.toJsonInput() = JsonInput(this.value, this.type, this.id)

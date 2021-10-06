@@ -17,11 +17,12 @@ internal class InputRoutesKtTest {
         val filename = "file:///no/file/with/this/path"
 
         withTestApplication({ module(testing = true) }) {
-            with(handleRequest(HttpMethod.Post, "/inputs/files") {
+            with(handleRequest(HttpMethod.Post, "/inputs") {
                 addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody("""
                     {
-                        "uri": "$filename"
+                        "value": "$filename",
+                        "type": "FILE"
                     }
                 """.trimIndent())
             }) {
@@ -48,11 +49,11 @@ internal class InputRoutesKtTest {
         val file = createTempFile()
 
         withTestApplication({ module(testing = true) }) {
-            val fileResponse: File? = addFile(file)
-            with(handleRequest(HttpMethod.Delete, "/inputs/files/id")) {
+            val fileResponse: JsonInput? = addFile(file)
+            with(handleRequest(HttpMethod.Delete, "/inputs/id")) {
                 assertEquals(404, response.status()?.value)
             }
-            with(handleRequest(HttpMethod.Delete, "/inputs/files/${fileResponse?.id}")) {
+            with(handleRequest(HttpMethod.Delete, "/inputs/${fileResponse?.id}")) {
                 assertEquals(204, response.status()?.value)
             }
         }
@@ -61,7 +62,7 @@ internal class InputRoutesKtTest {
     @Test
     fun getAll() {
         withTestApplication({ module(testing = true) }) {
-            with(handleRequest(HttpMethod.Get, "/inputs/files")) {
+            with(handleRequest(HttpMethod.Get, "/inputs")) {
                 assertEquals(200, response.status()?.value)
                 assertEquals("[]", response.content)
             }
@@ -69,13 +70,13 @@ internal class InputRoutesKtTest {
             val f1 = addFile(createTempFile())
             val f2 = addFile(createTempFile())
 
-            with(handleRequest(HttpMethod.Get, "/inputs/files")) {
+            with(handleRequest(HttpMethod.Get, "/inputs")) {
                 assertEquals(200, response.status()?.value)
-                val content = response.content?.let { Json.decodeFromString<List<File>>(it) }
+                val content = response.content?.let { Json.decodeFromString<List<JsonInput>>(it) }
                 assertEquals(2, content?.size)
-                val files = content?.map { it.uri } ?: listOf()
-                assertContains(files.toTypedArray(), f1?.uri)
-                assertContains(files.toTypedArray(), f2?.uri)
+                val files = content?.map { it.value } ?: listOf()
+                assertContains(files.toTypedArray(), f1?.value)
+                assertContains(files.toTypedArray(), f2?.value)
             }
         }
     }
@@ -83,15 +84,15 @@ internal class InputRoutesKtTest {
     @Test
     fun getFile() {
         withTestApplication({ module(testing = true) }) {
-            with(handleRequest(HttpMethod.Get, "/inputs/files/someId")) {
+            with(handleRequest(HttpMethod.Get, "/inputs/someId")) {
                 assertEquals(404, response.status()?.value)
             }
 
             val f = addFile(createTempFile())!!
 
-            with(handleRequest(HttpMethod.Get, "/inputs/files/${f.id}")) {
+            with(handleRequest(HttpMethod.Get, "/inputs/${f.id}")) {
                 assertEquals(200, response.status()?.value)
-                val content = response.content?.let { Json.decodeFromString<File>(it) }
+                val content = response.content?.let { Json.decodeFromString<JsonInput>(it) }
                 assertEquals(f.id, content?.id)
             }
         }
@@ -104,15 +105,16 @@ internal class InputRoutesKtTest {
     }
 
     private fun TestApplicationEngine.postFile(file: Path?) =
-        handleRequest(HttpMethod.Post, "/inputs/files") {
+        handleRequest(HttpMethod.Post, "/inputs") {
             addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             setBody("""
                     {
-                        "uri": "$file"
+                        "value": "$file",
+                        "type": "FILE"
                     }
             """.trimIndent())
         }
 
-    private fun TestApplicationEngine.addFile(file: Path?): File? =
-        postFile(file).response.content?.let { Json.decodeFromString<File>(it) }
+    private fun TestApplicationEngine.addFile(file: Path?): JsonInput? =
+        postFile(file).response.content?.let { Json.decodeFromString<JsonInput>(it) }
 }

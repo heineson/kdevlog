@@ -10,7 +10,6 @@ import io.ktor.features.*
 import io.ktor.serialization.*
 import org.kodein.di.bind
 import org.kodein.di.instance
-import org.kodein.di.ktor.DIFeature
 import org.kodein.di.ktor.di
 import org.kodein.di.singleton
 
