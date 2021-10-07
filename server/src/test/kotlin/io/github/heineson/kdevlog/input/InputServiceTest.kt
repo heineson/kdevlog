@@ -1,6 +1,7 @@
 package io.github.heineson.kdevlog.input
 
 import io.github.heineson.kdevlog.model.Input
+import io.github.heineson.kdevlog.model.InputState
 import io.github.heineson.kdevlog.model.InputType
 import io.github.heineson.kdevlog.util.TestInputStore
 import io.github.heineson.kdevlog.util.TestLogStore
@@ -44,7 +45,7 @@ internal class InputServiceTest {
     @Test
     @Timeout(30)
     fun testInputLifecycle() {
-        val input = Input("input1", InputType.FILE, tempLogFile.pathString)
+        val input = Input("input1", InputType.FILE, InputState.STOPPED, tempLogFile.pathString)
         val entriesInLogFile = 6
 
         // ADD

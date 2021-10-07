@@ -13,7 +13,7 @@ import kotlin.test.assertEquals
 
 internal class InputRoutesKtTest {
     @Test
-    fun postFile_BadRequestIfFileNotFound() {
+    fun postInput_BadRequestIfFileNotFound() {
         val filename = "file:///no/file/with/this/path"
 
         withTestApplication({ module(testing = true) }) {
@@ -33,11 +33,11 @@ internal class InputRoutesKtTest {
     }
 
     @Test
-    fun postFile_ShouldReturnIdIfSuccessful() {
+    fun postInput_ShouldReturnIdIfSuccessful() {
         val file = createTempFile()
 
         withTestApplication({ module(testing = true) }) {
-            with(postFile(file)) {
+            with(postInput(file)) {
                 assertEquals(201, response.status()?.value)
                 response.content?.let { assertContains(it, """"id":""") }
             }
@@ -45,11 +45,11 @@ internal class InputRoutesKtTest {
     }
 
     @Test
-    fun deleteFile() {
+    fun deleteInput() {
         val file = createTempFile()
 
         withTestApplication({ module(testing = true) }) {
-            val fileResponse: JsonInput? = addFile(file)
+            val fileResponse: JsonInput? = addInput(file)
             with(handleRequest(HttpMethod.Delete, "/inputs/id")) {
                 assertEquals(404, response.status()?.value)
             }
@@ -67,8 +67,8 @@ internal class InputRoutesKtTest {
                 assertEquals("[]", response.content)
             }
 
-            val f1 = addFile(createTempFile())
-            val f2 = addFile(createTempFile())
+            val f1 = addInput(createTempFile())
+            val f2 = addInput(createTempFile())
 
             with(handleRequest(HttpMethod.Get, "/inputs")) {
                 assertEquals(200, response.status()?.value)
@@ -82,13 +82,13 @@ internal class InputRoutesKtTest {
     }
 
     @Test
-    fun getFile() {
+    fun getInput() {
         withTestApplication({ module(testing = true) }) {
             with(handleRequest(HttpMethod.Get, "/inputs/someId")) {
                 assertEquals(404, response.status()?.value)
             }
 
-            val f = addFile(createTempFile())!!
+            val f = addInput(createTempFile())!!
 
             with(handleRequest(HttpMethod.Get, "/inputs/${f.id}")) {
                 assertEquals(200, response.status()?.value)
@@ -104,7 +104,7 @@ internal class InputRoutesKtTest {
         return f
     }
 
-    private fun TestApplicationEngine.postFile(file: Path?) =
+    private fun TestApplicationEngine.postInput(file: Path?) =
         handleRequest(HttpMethod.Post, "/inputs") {
             addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             setBody("""
@@ -115,6 +115,6 @@ internal class InputRoutesKtTest {
             """.trimIndent())
         }
 
-    private fun TestApplicationEngine.addFile(file: Path?): JsonInput? =
-        postFile(file).response.content?.let { Json.decodeFromString<JsonInput>(it) }
+    private fun TestApplicationEngine.addInput(file: Path?): JsonInput? =
+        postInput(file).response.content?.let { Json.decodeFromString<JsonInput>(it) }
 }

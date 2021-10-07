@@ -1,7 +1,8 @@
 package io.github.heineson.kdevlog.web
 
+import io.github.heineson.kdevlog.input.InputService
 import io.github.heineson.kdevlog.model.Input
-import io.github.heineson.kdevlog.store.InputStore
+import io.github.heineson.kdevlog.model.InputState
 import io.github.heineson.kdevlog.model.InputType
 import io.ktor.application.*
 import io.ktor.http.*
@@ -19,15 +20,10 @@ import kotlin.io.path.isRegularFile
 fun Application.inputRoutes() {
     routing {
         route("/inputs") {
-            val inputStore by closestDI().instance<InputStore>()
+            val inputService by closestDI().instance<InputService>()
 
             get {
-                call.respond(inputStore.getAll().map { it.toJsonInput() })
-            }
-            get("{id}") {
-                val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
-                inputStore.get(id)?.let { call.respond(it.toJsonInput()) }
-                    ?: call.respond(HttpStatusCode.NotFound)
+                call.respond(inputService.getAll().map { it.toJsonInput() })
             }
 
             post {
@@ -36,20 +32,35 @@ fun Application.inputRoutes() {
                     return@post call.respond(HttpStatusCode.BadRequest, "No file found for: ${input.value}")
                 }
                 val id = UUID.randomUUID().toString()
-                inputStore.save(Input(id, InputType.FILE, input.value))
+                inputService.addInput(Input(id, InputType.FILE, InputState.STOPPED, input.value))
                 call.respond(HttpStatusCode.Created, input.copy(id = id))
             }
 
-            delete("{id}") {
-                val id = call.parameters["id"] ?: return@delete call.respond(HttpStatusCode.BadRequest)
-                call.respond(if (inputStore.delete(id) == null) HttpStatusCode.NotFound else HttpStatusCode.NoContent)
+            route("/{id}") {
+                get {
+                    // TODO This validation must be possible to fix so I don't have to repeat it
+                    val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+                    inputService.get(id)?.let { call.respond(it.toJsonInput()) }
+                        ?: call.respond(HttpStatusCode.NotFound)
+                }
+
+
+                delete {
+                    val id = call.parameters["id"] ?: return@delete call.respond(HttpStatusCode.BadRequest)
+                    call.respond(if (inputService.removeInput(id)) HttpStatusCode.NoContent else HttpStatusCode.NotFound)
+                }
+
+                put {
+                    val id = call.parameters["id"] ?: return@put call.respond(HttpStatusCode.BadRequest)
+                    TODO("Implement this")
+                }
             }
         }
     }
 }
 
 @Serializable
-data class JsonInput(val value: String, val type: InputType, val id: String? = null) {
+data class JsonInput(val value: String, val type: InputType, val state: InputState = InputState.STOPPED, val id: String? = null) {
     fun validate(): Boolean {
         return when (type) {
             InputType.FILE -> Path.of(value).exists() && Path.of(value).isRegularFile()
@@ -57,4 +68,4 @@ data class JsonInput(val value: String, val type: InputType, val id: String? = n
     }
 }
 
-fun Input.toJsonInput() = JsonInput(this.value, this.type, this.id)
+fun Input.toJsonInput() = JsonInput(this.value, this.type, this.state, this.id)

@@ -12,9 +12,10 @@ class InputService(private val inputStore: Store<Input>, private val logStore: S
     private val logReaderInstances = ConcurrentHashMap<String, LogReader>() // TODO remove state from here
     private val log = KotlinLogging.logger {}
 
-    fun addInput(source: Input): Input {
-        return inputStore.save(source)
-    }
+    fun getAll() = inputStore.getAll()
+    fun get(id: String) = inputStore.get(id)
+
+    fun addInput(source: Input): Input = inputStore.save(source)
 
     fun startInput(input: Input) {
         val reader: LogReader = LogReader.of(input)
@@ -23,9 +24,9 @@ class InputService(private val inputStore: Store<Input>, private val logStore: S
         log.info { "Started input ${input.id}" }
     }
 
-    fun removeInput(id: String) {
+    fun removeInput(id: String): Boolean {
         logReaderInstances.remove(id)?.close()
-        inputStore.delete(id)
+        return inputStore.delete(id) != null
     }
 
     fun removeAll() {
