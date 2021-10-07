@@ -8,7 +8,7 @@ import io.github.heineson.kdevlog.store.*
 import mu.KotlinLogging
 import java.util.concurrent.ConcurrentHashMap
 
-class InputService(private val inputStore: InputStore, private val logStore: LogStore) {
+class InputService(private val inputStore: Store<Input>, private val logStore: Store<LogEntry>) {
     private val logReaderInstances = ConcurrentHashMap<String, LogReader>() // TODO remove state from here
     private val log = KotlinLogging.logger {}
 
@@ -30,6 +30,10 @@ class InputService(private val inputStore: InputStore, private val logStore: Log
 
     fun removeAll() {
         inputStore.getAll().forEach { removeInput(it.id) }
+    }
+
+    fun runningReaders(): List<String> {
+        return logReaderInstances.keys().toList()
     }
 
     private fun inputEntryHandler(stored: Input): (entry: String) -> Unit =
