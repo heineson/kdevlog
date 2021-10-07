@@ -1,6 +1,7 @@
 package io.github.heineson.kdevlog.store
 
-import io.github.heineson.kdevlog.domain.LogEntry
+import io.github.heineson.kdevlog.domain.LogEntryData
+import io.github.heineson.kdevlog.model.LogEntry
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import java.time.Instant
@@ -16,7 +17,7 @@ internal class LogStoreTest {
     @Test
     fun crudLogEntry() {
         val entity =
-            LogEntryEntity("source", LogEntry(Instant.now().truncatedTo(ChronoUnit.MILLIS), "WARN", "log message"))
+            LogEntry("source", LogEntryData(Instant.now().truncatedTo(ChronoUnit.MILLIS), "WARN", "log message"))
         assertNull(entity.id)
 
         with(LogStore()) {
@@ -55,8 +56,8 @@ internal class LogStoreTest {
 
             val logs = getSome(Filters(2, 2)).map { it.entryData }
             assertEquals(2, logs.size)
-            assertEquals(LogEntry(Instant.ofEpochMilli(1632256718758), "INFO", "log message 2"), logs[0])
-            assertEquals(LogEntry(Instant.ofEpochMilli(1632256718748), "WARN", "log message 1"), logs[1])
+            assertEquals(LogEntryData(Instant.ofEpochMilli(1632256718758), "INFO", "log message 2"), logs[0])
+            assertEquals(LogEntryData(Instant.ofEpochMilli(1632256718748), "WARN", "log message 1"), logs[1])
         }
     }
 
@@ -71,19 +72,19 @@ internal class LogStoreTest {
             )
             val logs = getSome(filters).map { it.entryData }
             assertEquals(3, logs.size)
-            assertEquals(LogEntry(Instant.ofEpochMilli(1632256718759), "ERROR", "log message 5"), logs[0])
-            assertEquals(LogEntry(Instant.ofEpochMilli(1632256718758), "INFO", "log message 2"), logs[1])
-            assertEquals(LogEntry(Instant.ofEpochMilli(1632256718748), "WARN", "log message 1"), logs[2])
+            assertEquals(LogEntryData(Instant.ofEpochMilli(1632256718759), "ERROR", "log message 5"), logs[0])
+            assertEquals(LogEntryData(Instant.ofEpochMilli(1632256718758), "INFO", "log message 2"), logs[1])
+            assertEquals(LogEntryData(Instant.ofEpochMilli(1632256718748), "WARN", "log message 1"), logs[2])
         }
     }
 
     private fun addLogEntries(logStore: LogStore) {
         val entities = listOf(
-            LogEntryEntity("source1", LogEntry(Instant.ofEpochMilli(1632256718748), "WARN", "log message 1")),
-            LogEntryEntity("source1", LogEntry(Instant.ofEpochMilli(1632256718758), "INFO", "log message 2")),
-            LogEntryEntity("source1", LogEntry(Instant.ofEpochMilli(1632256718768), "WARN", "log message 3")),
-            LogEntryEntity("source2", LogEntry(Instant.ofEpochMilli(1632256718747), "WARN", "log message 4")),
-            LogEntryEntity("source2", LogEntry(Instant.ofEpochMilli(1632256718759), "ERROR", "log message 5")),
+            LogEntry("source1", LogEntryData(Instant.ofEpochMilli(1632256718748), "WARN", "log message 1")),
+            LogEntry("source1", LogEntryData(Instant.ofEpochMilli(1632256718758), "INFO", "log message 2")),
+            LogEntry("source1", LogEntryData(Instant.ofEpochMilli(1632256718768), "WARN", "log message 3")),
+            LogEntry("source2", LogEntryData(Instant.ofEpochMilli(1632256718747), "WARN", "log message 4")),
+            LogEntry("source2", LogEntryData(Instant.ofEpochMilli(1632256718759), "ERROR", "log message 5")),
         )
         logStore.saveAll(entities)
         assertEquals(5, logStore.getAll().size)

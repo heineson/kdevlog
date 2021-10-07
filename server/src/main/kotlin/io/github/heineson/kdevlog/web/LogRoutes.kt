@@ -1,7 +1,7 @@
 package io.github.heineson.kdevlog.web
 
 import io.github.heineson.kdevlog.store.Filters
-import io.github.heineson.kdevlog.store.LogEntryEntity
+import io.github.heineson.kdevlog.model.LogEntry
 import io.github.heineson.kdevlog.store.LogStore
 import io.ktor.application.*
 import io.ktor.response.*
@@ -9,7 +9,6 @@ import io.ktor.routing.*
 import kotlinx.serialization.Serializable
 import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
-import org.kodein.di.ktor.di
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -39,6 +38,5 @@ fun Application.logRoutes() {
 @Serializable
 data class Log(val source: String, val timestamp: Long, val level: String, val message: String, val id: String? = null)
 
-fun LogEntryEntity.toLog(): Log {
-    return Log(sourceInputId, entryData.timestamp.toEpochMilli(), entryData.level, entryData.level, id)
-}
+fun LogEntry.toLog(): Log =
+    Log(sourceInputId, entryData.timestamp.toEpochMilli(), entryData.level, entryData.level, id)

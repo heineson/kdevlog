@@ -2,7 +2,8 @@ package io.github.heineson.kdevlog.store
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.github.heineson.kdevlog.domain.LogEntry
+import io.github.heineson.kdevlog.domain.LogEntryData
+import io.github.heineson.kdevlog.model.LogEntry
 import mu.KotlinLogging
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.*
@@ -10,7 +11,7 @@ import org.jetbrains.exposed.sql.`java-time`.timestamp
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.Instant
 
-class LogStore : Store<LogEntryEntity> {
+class LogStore : Store<LogEntry> {
     private val log = KotlinLogging.logger {}
 
     init {
@@ -25,7 +26,7 @@ class LogStore : Store<LogEntryEntity> {
         log.info { "Created in-memory sqlite log database" }
     }
 
-    override fun saveAll(entities: Collection<LogEntryEntity>) {
+    override fun saveAll(entities: Collection<LogEntry>) {
         transaction {
             Logs.batchInsert(entities.filter { it.id == null }) {
                 this[Logs.timestamp] = it.entryData.timestamp
@@ -36,7 +37,7 @@ class LogStore : Store<LogEntryEntity> {
         }
     }
 
-    override fun save(entity: LogEntryEntity): LogEntryEntity {
+    override fun save(entity: LogEntry): LogEntry {
         entity.id?.let {
             throw IllegalArgumentException("You can't save an already stored entry")
         }
@@ -51,19 +52,19 @@ class LogStore : Store<LogEntryEntity> {
         return entity.copy(id = id.toString())
     }
 
-    override fun getAll(): List<LogEntryEntity> {
+    override fun getAll(): List<LogEntry> {
         return transaction {
             Logs.selectAll().map(toEntity())
         }
     }
 
-    override fun get(id: String): LogEntryEntity? {
+    override fun get(id: String): LogEntry? {
         return transaction {
             Logs.select { Logs.id eq id.toInt() }.map(toEntity()).firstOrNull()
         }
     }
 
-    fun getSome(filters: Filters = Filters()): List<LogEntryEntity> {
+    fun getSome(filters: Filters = Filters()): List<LogEntry> {
         val q = Logs.selectAll()
         filters.from?.let { q.andWhere { Logs.timestamp greaterEq it } }
         filters.to?.let { q.andWhere { Logs.timestamp lessEq it } }
@@ -74,7 +75,7 @@ class LogStore : Store<LogEntryEntity> {
         }
     }
 
-    override fun delete(id: String): LogEntryEntity? {
+    override fun delete(id: String): LogEntry? {
         transaction {
             Logs.deleteWhere { Logs.id eq id.toInt() }
         }
@@ -88,18 +89,16 @@ class LogStore : Store<LogEntryEntity> {
         log.info { "Logs table cleared, $count entries removed" }
     }
 
-    private fun toEntity(): (ResultRow) -> LogEntryEntity =
+    private fun toEntity(): (ResultRow) -> LogEntry =
         {
-            LogEntryEntity(
+            LogEntry(
                 it[Logs.sourceInputId],
-                LogEntry(it[Logs.timestamp], it[Logs.level], it[Logs.message]),
+                LogEntryData(it[Logs.timestamp], it[Logs.level], it[Logs.message]),
                 it[Logs.id].toString()
             )
         }
 
 }
-
-data class LogEntryEntity(val sourceInputId: String, val entryData: LogEntry, val id: String? = null)
 
 data class Filters(val offset: Long = 0, val limit: Int = 1000, val from: Instant? = null, val to: Instant? = null)
 

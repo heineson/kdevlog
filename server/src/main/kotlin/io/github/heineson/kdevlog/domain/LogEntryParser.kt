@@ -6,12 +6,12 @@ import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoField
 
 
-data class LogEntry(val timestamp: Instant, val level: String, val message: String)
+data class LogEntryData(val timestamp: Instant, val level: String, val message: String)
 
 /**
  * Parses a line with regex
  */
-fun parseEntry(entry: String, config: LogFormat): Result<LogEntry> {
+fun parseEntry(entry: String, config: LogFormat): Result<LogEntryData> {
     return config.toRegex().matchEntire(entry)?.groups?.let {
         val ts = it["timestamp"]?.value
             ?.let { v -> parseTimestamp(v, config.timestampFormat) }
@@ -19,7 +19,7 @@ fun parseEntry(entry: String, config: LogFormat): Result<LogEntry> {
             ?: return Result.failure(IllegalArgumentException("Could not parse timestamp"))
         val level = if (config.pattern.contains("<level>")) it["level"]?.value ?: "" else ""
         val body = it["message"]?.value ?: return Result.failure(IllegalArgumentException("Could not find message body"))
-        Result.success(LogEntry(ts, level, body))
+        Result.success(LogEntryData(ts, level, body))
     } ?: Result.failure(IllegalArgumentException("Could not parse log entry"))
 }
 
