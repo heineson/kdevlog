@@ -3,6 +3,7 @@ package io.github.heineson.kdevlog
 import io.github.heineson.kdevlog.input.InputService
 import io.github.heineson.kdevlog.store.InputStore
 import io.github.heineson.kdevlog.store.LogStore
+import io.github.heineson.kdevlog.web.errorHandler
 import io.github.heineson.kdevlog.web.inputRoutes
 import io.github.heineson.kdevlog.web.logRoutes
 import io.ktor.application.*
@@ -27,4 +28,5 @@ fun Application.module(testing: Boolean = false) {
     }
     inputRoutes()
     logRoutes()
+    errorHandler()
 }

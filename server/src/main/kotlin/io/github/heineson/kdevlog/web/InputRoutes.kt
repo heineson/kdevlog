@@ -5,6 +5,7 @@ import io.github.heineson.kdevlog.model.Input
 import io.github.heineson.kdevlog.model.InputState
 import io.github.heineson.kdevlog.model.InputType
 import io.ktor.application.*
+import io.ktor.features.*
 import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.response.*
@@ -12,10 +13,7 @@ import io.ktor.routing.*
 import kotlinx.serialization.Serializable
 import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
-import java.nio.file.Path
 import java.util.*
-import kotlin.io.path.exists
-import kotlin.io.path.isRegularFile
 
 fun Application.inputRoutes() {
     routing {
@@ -28,12 +26,10 @@ fun Application.inputRoutes() {
 
             post {
                 val input = call.receive<JsonInput>()
-                if (!input.validate()) {
-                    return@post call.respond(HttpStatusCode.BadRequest, "No file found for: ${input.value}")
-                }
                 val id = UUID.randomUUID().toString()
                 inputService.addInput(Input(id, InputType.FILE, InputState.STOPPED, input.value))
-                call.respond(HttpStatusCode.Created, input.copy(id = id))
+                    .onFailure { throw BadRequestException(it.message ?: "", it) }
+                    .onSuccess { call.respond(HttpStatusCode.Created, it.toJsonInput()) }
             }
 
             route("/{id}") {
@@ -60,12 +56,6 @@ fun Application.inputRoutes() {
 }
 
 @Serializable
-data class JsonInput(val value: String, val type: InputType, val state: InputState = InputState.STOPPED, val id: String? = null) {
-    fun validate(): Boolean {
-        return when (type) {
-            InputType.FILE -> Path.of(value).exists() && Path.of(value).isRegularFile()
-        }
-    }
-}
+data class JsonInput(val value: String, val type: InputType, val state: InputState = InputState.STOPPED, val id: String? = null)
 
 fun Input.toJsonInput() = JsonInput(this.value, this.type, this.state, this.id)

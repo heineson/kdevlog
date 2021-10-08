@@ -26,8 +26,8 @@ internal class InputRoutesKtTest {
                     }
                 """.trimIndent())
             }) {
-                assertEquals("No file found for: $filename", response.content)
                 assertEquals(400, response.status()?.value)
+                assertEquals("File '$filename' does not exist or is not a regular file", response.content)
             }
         }
     }
