@@ -54,14 +54,16 @@ internal class InputServiceTest {
             assertEquals(1, this.size)
             assertEquals(input.id, this[0].id)
             assertEquals(0, service.runningReaders().size)
+            assertEquals(InputState.STOPPED, this[0].state)
         }
 
         // START
-        service.startInput(input)
+        service.startInput(input.id)
         with(service.runningReaders()) {
             assertEquals(1, this.size)
             assertEquals(input.id, this[0])
         }
+        assertEquals(InputState.STARTED, service.get(input.id)?.state)
 
         // COLLECT LOG ENTRIES
         while (logStore.getAll().size < entriesInLogFile) {

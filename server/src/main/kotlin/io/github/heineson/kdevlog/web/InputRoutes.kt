@@ -27,28 +27,32 @@ fun Application.inputRoutes() {
             post {
                 val input = call.receive<JsonInput>()
                 val id = UUID.randomUUID().toString()
-                inputService.addInput(Input(id, InputType.FILE, InputState.STOPPED, input.value))
+                inputService.addInput(Input(id, input.type, input.state, input.value))
                     .onFailure { throw BadRequestException(it.message ?: "", it) }
                     .onSuccess { call.respond(HttpStatusCode.Created, it.toJsonInput()) }
             }
 
             route("/{id}") {
                 get {
-                    // TODO This validation must be possible to fix so I don't have to repeat it
-                    val id = call.parameters["id"] ?: return@get call.respond(HttpStatusCode.BadRequest)
+                    val id = call.parameters.getMandatory("id")
                     inputService.get(id)?.let { call.respond(it.toJsonInput()) }
                         ?: call.respond(HttpStatusCode.NotFound)
                 }
 
-
                 delete {
-                    val id = call.parameters["id"] ?: return@delete call.respond(HttpStatusCode.BadRequest)
+                    val id = call.parameters.getMandatory("id")
                     call.respond(if (inputService.removeInput(id)) HttpStatusCode.NoContent else HttpStatusCode.NotFound)
                 }
 
                 put {
-                    val id = call.parameters["id"] ?: return@put call.respond(HttpStatusCode.BadRequest)
-                    TODO("Implement this")
+                    val id = call.parameters.getMandatory("id")
+                    val state = call.receive<JsonInput>().state
+                    if (state != InputState.STARTED) {
+                        throw BadRequestException("Only state=${InputState.STARTED} is allowed")
+                    }
+                    inputService.startInput(id)
+                        .onSuccess { call.respond(it.toJsonInput()) }
+                        .onFailure { throw it }
                 }
             }
         }
@@ -56,6 +60,6 @@ fun Application.inputRoutes() {
 }
 
 @Serializable
-data class JsonInput(val value: String, val type: InputType, val state: InputState = InputState.STOPPED, val id: String? = null)
+data class JsonInput(val id: String? = null, val value: String, val type: InputType, val state: InputState = InputState.STOPPED)
 
-fun Input.toJsonInput() = JsonInput(this.value, this.type, this.state, this.id)
+fun Input.toJsonInput() = JsonInput(this.id, this.value, this.type, this.state)
