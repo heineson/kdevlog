@@ -1,6 +1,6 @@
 package io.github.heineson.kdevlog.store
 
-import io.github.heineson.kdevlog.domain.LogEntryData
+import io.github.heineson.kdevlog.model.LogEntryData
 import io.github.heineson.kdevlog.model.LogEntry
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
