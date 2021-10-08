@@ -12,7 +12,8 @@ fun Application.errorHandler() {
         exception<BadRequestException> { cause ->
             call.respond(HttpStatusCode.BadRequest, cause.message ?: "")
         }
-        exception<Throwable> {
+        exception<Throwable> { cause ->
+            log.error("Internal Server Error", cause)
             call.respond(HttpStatusCode.InternalServerError)
         }
     }

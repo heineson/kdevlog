@@ -11,6 +11,7 @@ import io.ktor.features.*
 import io.ktor.serialization.*
 import org.kodein.di.bind
 import org.kodein.di.instance
+import org.kodein.di.ktor.closestDI
 import org.kodein.di.ktor.di
 import org.kodein.di.singleton
 
@@ -29,4 +30,10 @@ fun Application.module(testing: Boolean = false) {
     inputRoutes()
     logRoutes()
     errorHandler()
+
+    environment.monitor.subscribe(ApplicationStopped){
+        log.info("Shutting down...")
+        val inputService by closestDI().instance<InputService>()
+        inputService.removeAll()
+    }
 }

@@ -32,6 +32,7 @@ class InputService(private val inputStore: Store<Input>, private val logStore: S
     }
 
     fun removeInput(id: String): Boolean {
+        log.info { "Removing input $id" }
         logReaderInstances.remove(id)?.close()
         return inputStore.delete(id) != null
     }
