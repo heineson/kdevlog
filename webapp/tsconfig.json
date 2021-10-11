@@ -23,5 +23,7 @@
   "include": [
     "src"
   ],
-  "extends": "./tsconfig.paths.json"
+  "exclude": [
+    "node_modules"
+  ]
 }
