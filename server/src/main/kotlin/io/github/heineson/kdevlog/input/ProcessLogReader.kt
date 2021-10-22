@@ -1,13 +1,12 @@
 package io.github.heineson.kdevlog.input
 
+import kotlinx.coroutines.*
 import mu.KotlinLogging
-import java.io.IOException
-
 
 class ProcessLogReader(private val command: List<String>) : LogReader() {
     private val log = KotlinLogging.logger {}
     private lateinit var process: Process
-    private lateinit var ioThread: Thread
+    private lateinit var job: Job
 
     override fun start(cb: (entry: String) -> Unit) {
         process = ProcessBuilder(command)
@@ -15,25 +14,14 @@ class ProcessLogReader(private val command: List<String>) : LogReader() {
             .redirectError(ProcessBuilder.Redirect.PIPE)
             .start()
 
-        ioThread = object : Thread() {
-            override fun run() {
-                println("STARTED THREAD")
-                try {
-                    process.inputStream.bufferedReader().forEachLine {
-                        println("ADD: $it")
-                        cb(it)
-                        yield()
-                    }
-                } catch (exception: IOException) {
-                    System.err.println("Fatal Error: " + exception.message)
-                }
-            }
+        job = CoroutineScope(Dispatchers.IO).launch {
+            process.inputStream.bufferedReader().forEachLine(cb)
         }
-        ioThread.start()
+        log.info { "Process log reader created" }
     }
 
     override fun close() {
-        if (ioThread.isAlive) ioThread.stop()
+        job.cancel("Log reader is closing")
         process.destroy()
     }
 
