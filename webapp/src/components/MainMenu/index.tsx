@@ -1,6 +1,20 @@
 import { PropsWithChildren, ReactNode } from 'react';
-import { Box, Flex, HStack, IconButton, Link, Stack, useColorModeValue, useDisclosure } from '@chakra-ui/react';
-import { CloseIcon, HamburgerIcon } from '@chakra-ui/icons';
+import {
+  Box,
+  Flex,
+  HStack,
+  Icon,
+  IconButton,
+  Link,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Stack,
+  useColorModeValue,
+  useDisclosure,
+} from '@chakra-ui/react';
+import { MdAdd, MdClose, MdMenu } from 'react-icons/md';
+import AddSourcesForm from '../AddSourcesForm';
 
 const Links = ['Dashboard', 'Projects', 'Team'];
 
@@ -28,12 +42,26 @@ function MainMenu({ children }: PropsWithChildren<unknown>) {
         <Flex h={16} alignItems={'center'} justifyContent={'space-between'}>
           <IconButton
             size={'md'}
-            icon={isOpen ? <CloseIcon /> : <HamburgerIcon />}
+            icon={isOpen ? <Icon as={MdClose} w={6} h={6} /> : <Icon as={MdMenu} w={6} h={6} />}
             aria-label={'Open Menu'}
             display={{ md: 'none' }}
             onClick={isOpen ? onClose : onOpen}
           />
           <HStack spacing={8} alignItems={'center'}>
+            <Popover>
+              <PopoverTrigger>
+                <IconButton
+                  colorScheme={'blue'}
+                  size={'sm'}
+                  icon={<Icon as={MdAdd} w={6} h={6} />}
+                  aria-label={'Add source'}
+                  title={'Add source'}
+                />
+              </PopoverTrigger>
+              <PopoverContent p={3}>
+                <AddSourcesForm />
+              </PopoverContent>
+            </Popover>
             <HStack as={'nav'} spacing={4} display={{ base: 'none', md: 'flex' }}>
               {Links.map((link) => (
                 <NavLink key={link}>{link}</NavLink>
