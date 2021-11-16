@@ -41,7 +41,11 @@ const AddSourcesForm = () => {
 
   return (
     <form onSubmit={onSubmit}>
-      {files.length > 0 && <List>{files.map((value) => renderListItem(value))}</List>}
+      {files.length > 0 && (
+        <List spacing={1} mb={1}>
+          {files.map((value) => renderListItem(value))}
+        </List>
+      )}
 
       <FormControl isInvalid={!!errors.file_}>
         <FileUpload accept={'text/*'} register={register(`file_`)}>

@@ -15,7 +15,8 @@ const NotificationContainer = ({ notifications, removeNotification }: Notificati
       const n = notifications.pop();
       if (n) {
         toast({
-          title: n.message,
+          title: n.title,
+          description: n.message,
           status: n.type,
           duration: 9000,
           isClosable: true,

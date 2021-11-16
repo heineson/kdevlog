@@ -27,6 +27,11 @@ fun Application.module(testing: Boolean = false) {
     install(ContentNegotiation) {
         json()
     }
+    install(CORS) {
+        anyHost()
+        allowNonSimpleContentTypes = true
+        allowSameOrigin = true
+    }
     inputRoutes()
     logRoutes()
     errorHandler()
