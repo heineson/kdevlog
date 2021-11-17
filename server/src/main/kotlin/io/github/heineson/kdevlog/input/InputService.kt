@@ -22,7 +22,7 @@ class InputService(private val inputStore: Store<Input>, private val logStore: S
     fun get(id: String) = inputStore.get(id)
 
     fun addInput(source: Input): Result<Input> {
-        return source.validate()?.let { Result.failure(it) } ?: Result.success(inputStore.save(source))
+        return source.validate(getAll())?.let { Result.failure(it) } ?: Result.success(inputStore.save(source))
     }
 
     fun startInput(id: String): Result<Input> { // TODO merge with add?
@@ -51,11 +51,14 @@ class InputService(private val inputStore: Store<Input>, private val logStore: S
         { line -> parseEntry(line, SYSLOG_CONFIG).onSuccess { logStore.save(LogEntry(stored.id, it)) } }
 }
 
-fun Input.validate(): Exception? {
+fun Input.validate(inputs: List<Input>): Exception? {
     return when (type) {
         InputType.FILE -> {
-            if (Path.of(value).notExists() || !Path.of(value).isRegularFile())
+            val path = Path.of(value)
+            if (path.notExists() || !path.isRegularFile())
                 FileNotFoundException("File '${this.value}' does not exist or is not a regular file")
+            else if (value in inputs.filter { it.type == InputType.FILE }.map { it.value })
+                FileAlreadyExistsException(path.toFile(), reason = "File '${this.value}' has already been added")
             else null
         }
     }

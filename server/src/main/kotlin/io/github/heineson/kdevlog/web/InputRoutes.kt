@@ -28,7 +28,12 @@ fun Application.inputRoutes() {
                 val input = call.receive<JsonInput>()
                 val id = UUID.randomUUID().toString()
                 inputService.addInput(Input(id, input.type, input.state, input.value))
-                    .onFailure { throw BadRequestException(it.message ?: "", it) }
+                    .onFailure {
+                        if (it is FileAlreadyExistsException)
+                            throw it
+                        else
+                            throw BadRequestException(it.message ?: "", it)
+                    }
                     .onSuccess { call.respond(HttpStatusCode.Created, it.toJsonInput()) }
             }
 

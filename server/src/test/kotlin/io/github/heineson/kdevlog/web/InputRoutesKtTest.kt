@@ -45,6 +45,19 @@ internal class InputRoutesKtTest {
     }
 
     @Test
+    fun postInput_ShouldReturn409IfSameFile() {
+        val file = createTempFile()
+        withTestApplication({ module(testing = true) }) {
+            with(postInput(file)) {
+                assertEquals(201, response.status()?.value)
+            }
+            with(postInput(file)) {
+                assertEquals(409, response.status()?.value)
+            }
+        }
+    }
+
+    @Test
     fun deleteInput() {
         val file = createTempFile()
 
