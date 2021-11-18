@@ -1,5 +1,6 @@
 package io.github.heineson.kdevlog.web
 
+import io.github.heineson.kdevlog.input.InputAlreadyExistsException
 import io.github.heineson.kdevlog.input.InputService
 import io.github.heineson.kdevlog.model.Input
 import io.github.heineson.kdevlog.model.InputState
@@ -29,7 +30,7 @@ fun Application.inputRoutes() {
                 val id = UUID.randomUUID().toString()
                 inputService.addInput(Input(id, input.type, input.state, input.value))
                     .onFailure {
-                        if (it is FileAlreadyExistsException)
+                        if (it is InputAlreadyExistsException)
                             throw it
                         else
                             throw BadRequestException(it.message ?: "", it)

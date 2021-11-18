@@ -1,5 +1,6 @@
 package io.github.heineson.kdevlog.web
 
+import io.github.heineson.kdevlog.input.InputAlreadyExistsException
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.http.*
@@ -10,7 +11,7 @@ fun Application.errorHandler() {
         exception<BadRequestException> { cause ->
             call.respond(HttpStatusCode.BadRequest, cause.message ?: "")
         }
-        exception<FileAlreadyExistsException> { cause ->
+        exception<InputAlreadyExistsException> { cause ->
             call.respond(HttpStatusCode.Conflict, cause.message ?: "")
         }
         exception<Throwable> { cause ->

@@ -1,5 +1,6 @@
 package io.github.heineson.kdevlog.web
 
+import io.github.heineson.kdevlog.model.InputType
 import io.github.heineson.kdevlog.module
 import io.ktor.http.*
 import io.ktor.server.testing.*
@@ -41,17 +42,30 @@ internal class InputRoutesKtTest {
                 assertEquals(201, response.status()?.value)
                 response.content?.let { assertContains(it, """"id":""") }
             }
+
+            with(postInput("echo test", InputType.PROCESS)) {
+                assertEquals(201, response.status()?.value)
+                response.content?.let { assertContains(it, """"id":""") }
+            }
         }
     }
 
     @Test
-    fun postInput_ShouldReturn409IfSameFile() {
+    fun postInput_ShouldReturn409IfSameFileOrProcess() {
         val file = createTempFile()
+        val process = "echo test"
         withTestApplication({ module(testing = true) }) {
             with(postInput(file)) {
                 assertEquals(201, response.status()?.value)
             }
             with(postInput(file)) {
+                assertEquals(409, response.status()?.value)
+            }
+
+            with(postInput(process, InputType.PROCESS)) {
+                assertEquals(201, response.status()?.value)
+            }
+            with(postInput(process, InputType.PROCESS)) {
                 assertEquals(409, response.status()?.value)
             }
         }
@@ -117,17 +131,21 @@ internal class InputRoutesKtTest {
         return f
     }
 
-    private fun TestApplicationEngine.postInput(file: Path?) =
+    private fun TestApplicationEngine.postInput(file: Path?) = postInput("$file", InputType.FILE)
+
+    private fun TestApplicationEngine.postInput(value: String, type: InputType) =
         handleRequest(HttpMethod.Post, "/inputs") {
             addHeader(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             setBody("""
                     {
-                        "value": "$file",
-                        "type": "FILE"
+                        "value": "$value",
+                        "type": "$type"
                     }
             """.trimIndent())
         }
 
-    private fun TestApplicationEngine.addInput(file: Path?): JsonInput? =
-        postInput(file).response.content?.let { Json.decodeFromString<JsonInput>(it) }
+    private fun TestApplicationEngine.addInput(file: Path?): JsonInput? = addInput("$file", InputType.FILE)
+
+    private fun TestApplicationEngine.addInput(value: String, type: InputType): JsonInput? =
+        postInput(value, type).response.content?.let { Json.decodeFromString<JsonInput>(it) }
 }

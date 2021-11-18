@@ -10,6 +10,7 @@ sealed class LogReader : AutoCloseable {
     companion object {
         fun of(model: Input): LogReader = when (model.type) {
             InputType.FILE -> FileLogReader(Path.of(model.value))
+            InputType.PROCESS -> ProcessLogReader(model.value.split(Regex("\\s+")))
         }
     }
 }

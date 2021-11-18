@@ -14,6 +14,8 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.notExists
 
+class InputAlreadyExistsException(message: String) : Exception(message)
+
 class InputService(private val inputStore: Store<Input>, private val logStore: Store<LogEntry>) {
     private val logReaderInstances = ConcurrentHashMap<String, LogReader>() // TODO remove state from here
     private val log = KotlinLogging.logger {}
@@ -52,14 +54,16 @@ class InputService(private val inputStore: Store<Input>, private val logStore: S
 }
 
 fun Input.validate(inputs: List<Input>): Exception? {
+    if (value in inputs.filter { it.type == type }.map { it.value }) {
+        return InputAlreadyExistsException("Input '$value' has already been added")
+    }
     return when (type) {
         InputType.FILE -> {
             val path = Path.of(value)
             if (path.notExists() || !path.isRegularFile())
                 FileNotFoundException("File '${this.value}' does not exist or is not a regular file")
-            else if (value in inputs.filter { it.type == InputType.FILE }.map { it.value })
-                FileAlreadyExistsException(path.toFile(), reason = "File '${this.value}' has already been added")
             else null
         }
+        InputType.PROCESS -> null
     }
 }
