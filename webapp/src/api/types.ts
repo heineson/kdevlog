@@ -4,3 +4,11 @@ export type Input = {
   type: string;
   state: string;
 };
+
+export type LogEntry = {
+  id: string;
+  source: string;
+  timestamp: number;
+  level: string;
+  message: string;
+};
