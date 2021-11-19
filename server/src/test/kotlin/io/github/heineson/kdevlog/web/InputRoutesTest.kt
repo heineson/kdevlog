@@ -12,7 +12,8 @@ import java.nio.file.Path
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 
-internal class InputRoutesKtTest {
+@kotlinx.serialization.ExperimentalSerializationApi
+internal class InputRoutesTest {
     @Test
     fun postInput_BadRequestIfFileNotFound() {
         val filename = "file:///no/file/with/this/path"
