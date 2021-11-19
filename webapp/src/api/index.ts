@@ -2,13 +2,13 @@ import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { axios } from './axios';
 import { Input } from './types';
 import { useNotificationStore } from '../store/notifications';
+import { AxiosError } from 'axios';
 
 export const getInputs = (): Promise<Input[]> => {
   return axios.get('/inputs');
 };
 
 export const addInput = (input: Input) => {
-  console.log('POST');
   return axios.post('/inputs', input);
 };
 
@@ -24,10 +24,10 @@ export const useAddInput = () => {
   const queryClient = useQueryClient();
 
   return useMutation(addInput, {
-    onError: () => {
+    onError: (e: AxiosError) => {
       addNotification({
         type: 'error',
-        title: 'Failed to add input',
+        title: e.response?.status === 409 ? 'Already added' : 'Failed to add input',
       });
     },
     onSuccess: () => {

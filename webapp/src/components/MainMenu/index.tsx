@@ -1,6 +1,7 @@
-import { PropsWithChildren, ReactNode } from 'react';
+import React, { PropsWithChildren, ReactNode } from 'react';
 import {
   Box,
+  Button,
   Flex,
   HStack,
   Icon,
@@ -15,6 +16,7 @@ import {
 } from '@chakra-ui/react';
 import { MdAdd, MdClose, MdMenu } from 'react-icons/md';
 import AddSourcesForm from '../AddSourcesForm';
+import { useAddInput } from '../../api';
 
 const Links = ['Dashboard', 'Projects', 'Team'];
 
@@ -35,6 +37,16 @@ const NavLink = ({ children }: { children: ReactNode }) => (
 
 function MainMenu({ children }: PropsWithChildren<unknown>) {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const mutation = useAddInput();
+
+  const handleAddInput = () => {
+    mutation.mutate({
+      id: '',
+      type: 'FILE',
+      state: 'STOPPED',
+      value: '/var/log/syslog',
+    });
+  };
 
   return (
     <>
@@ -62,6 +74,9 @@ function MainMenu({ children }: PropsWithChildren<unknown>) {
                 <AddSourcesForm />
               </PopoverContent>
             </Popover>
+            <Button colorScheme={'blue'} onClick={handleAddInput}>
+              Add syslog
+            </Button>
             <HStack as={'nav'} spacing={4} display={{ base: 'none', md: 'flex' }}>
               {Links.map((link) => (
                 <NavLink key={link}>{link}</NavLink>

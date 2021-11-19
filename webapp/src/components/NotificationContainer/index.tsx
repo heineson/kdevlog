@@ -18,7 +18,7 @@ const NotificationContainer = ({ notifications, removeNotification }: Notificati
           title: n.title,
           description: n.message,
           status: n.type,
-          duration: 9000,
+          duration: n.type === 'success' ? 3000 : 6000,
           isClosable: true,
         });
         removeNotification(n.id);
