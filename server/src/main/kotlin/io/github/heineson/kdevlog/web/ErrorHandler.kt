@@ -7,21 +7,30 @@ import io.ktor.http.*
 import io.ktor.response.*
 import kotlinx.serialization.SerializationException
 
-// TODO perhaps add header X-Reason for frontend to read?
+const val X_REASON_HEADER = "X-Reason"
+
 fun Application.errorHandler() {
     install(StatusPages) {
-        exception<BadRequestException> { cause ->
-            call.respond(HttpStatusCode.BadRequest, cause.message ?: "")
-        }
-        exception<SerializationException> { cause ->
-            call.respond(HttpStatusCode.BadRequest, cause.message ?: "")
-        }
-        exception<InputAlreadyExistsException> { cause ->
-            call.respond(HttpStatusCode.Conflict, cause.message ?: "")
-        }
+        respondWithReasonHeader<BadRequestException>(HttpStatusCode.BadRequest)
+        respondWithReasonHeader<SerializationException>(HttpStatusCode.BadRequest)
+        respond<InputAlreadyExistsException>(HttpStatusCode.Conflict)
+
         exception<Throwable> { cause ->
             log.error("Internal Server Error", cause)
             call.respond(HttpStatusCode.InternalServerError)
         }
+    }
+}
+
+inline fun <reified T : Throwable> StatusPages.Configuration.respond(status: HttpStatusCode) {
+    exception<T> { cause ->
+        call.respond(status, cause.message ?: "")
+    }
+}
+
+inline fun <reified T : Throwable> StatusPages.Configuration.respondWithReasonHeader(status: HttpStatusCode) {
+    exception<T> { cause ->
+        cause.message?.let { call.response.headers.append(X_REASON_HEADER, it) }
+        call.respond(status, cause.message ?: "")
     }
 }

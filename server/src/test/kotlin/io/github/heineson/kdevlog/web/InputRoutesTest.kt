@@ -12,7 +12,7 @@ import java.nio.file.Path
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 
-internal class InputRoutesKtTest {
+internal class InputRoutesTest {
     @Test
     fun postInput_BadRequestIfFileNotFound() {
         val filename = "file:///no/file/with/this/path"
@@ -28,6 +28,7 @@ internal class InputRoutesKtTest {
                 """.trimIndent())
             }) {
                 assertEquals(400, response.status()?.value)
+                assertEquals("File '$filename' does not exist or is not a regular file", response.headers[X_REASON_HEADER])
                 assertEquals("File '$filename' does not exist or is not a regular file", response.content)
             }
         }
