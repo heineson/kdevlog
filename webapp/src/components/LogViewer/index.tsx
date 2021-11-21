@@ -18,7 +18,7 @@ const LogViewer = () => {
       <Box mt={2} bg={'gray.300'}>
         <ul>
           {logs?.data?.map((d) => (
-            <li>{d}</li>
+            <li key={d.id}>{`${d.timestamp} ${d.source} ${d.level}: ${d.message}`}</li>
           ))}
         </ul>
       </Box>

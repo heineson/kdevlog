@@ -14,9 +14,9 @@ import {
   useColorModeValue,
   useDisclosure,
 } from '@chakra-ui/react';
-import { MdAdd, MdClose, MdMenu } from 'react-icons/md';
+import { MdAdd, MdClose, MdMenu, MdPlayArrow } from 'react-icons/md';
 import AddSourcesForm from '../AddSourcesForm';
-import { useAddInput } from '../../api';
+import { useAddInput, useChangeInputState, useInputs } from '../../api';
 
 const Links = ['Dashboard', 'Projects', 'Team'];
 
@@ -37,14 +37,24 @@ const NavLink = ({ children }: { children: ReactNode }) => (
 
 function MainMenu({ children }: PropsWithChildren<unknown>) {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const mutation = useAddInput();
+  const addInput = useAddInput();
+  const updateInput = useChangeInputState();
+  const inputs = useInputs();
 
   const handleAddInput = () => {
-    mutation.mutate({
+    addInput.mutate({
       id: '',
       type: 'FILE',
       state: 'STOPPED',
       value: '/var/log/syslog',
+    });
+  };
+
+  const handleStartInputs = () => {
+    const input = (inputs?.data || [])[0];
+    updateInput.mutate({
+      ...input,
+      state: 'STARTED',
     });
   };
 
@@ -77,6 +87,14 @@ function MainMenu({ children }: PropsWithChildren<unknown>) {
             <Button colorScheme={'blue'} onClick={handleAddInput}>
               Add syslog
             </Button>
+            <IconButton
+              colorScheme={'blue'}
+              size={'sm'}
+              icon={<Icon as={MdPlayArrow} w={6} h={6} />}
+              aria-label={'Start inputs'}
+              title={'Start inputs'}
+              onClick={handleStartInputs}
+            />
             <HStack as={'nav'} spacing={4} display={{ base: 'none', md: 'flex' }}>
               {Links.map((link) => (
                 <NavLink key={link}>{link}</NavLink>

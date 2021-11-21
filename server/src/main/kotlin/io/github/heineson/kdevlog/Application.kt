@@ -8,6 +8,7 @@ import io.github.heineson.kdevlog.web.inputRoutes
 import io.github.heineson.kdevlog.web.logRoutes
 import io.ktor.application.*
 import io.ktor.features.*
+import io.ktor.http.*
 import io.ktor.serialization.*
 import org.kodein.di.bind
 import org.kodein.di.instance
@@ -29,6 +30,7 @@ fun Application.module(testing: Boolean = false) {
     }
     install(CORS) {
         anyHost()
+        method(HttpMethod.Put)
         allowNonSimpleContentTypes = true
         allowSameOrigin = true
     }

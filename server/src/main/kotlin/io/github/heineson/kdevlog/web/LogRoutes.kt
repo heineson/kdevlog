@@ -39,4 +39,4 @@ fun Application.logRoutes() {
 data class Log(val source: String, val timestamp: Long, val level: String, val message: String, val id: String? = null)
 
 fun LogEntry.toLog(): Log =
-    Log(sourceInputId, entryData.timestamp.toEpochMilli(), entryData.level, entryData.level, id)
+    Log(sourceInputId, entryData.timestamp.toEpochMilli(), entryData.level, entryData.message, id)

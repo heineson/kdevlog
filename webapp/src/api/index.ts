@@ -4,12 +4,16 @@ import { Input } from './types';
 import { useNotificationStore } from '../store/notifications';
 import { AxiosError } from 'axios';
 
-export const getInputs = (): Promise<Input[]> => {
+const getInputs = (): Promise<Input[]> => {
   return axios.get('/inputs');
 };
 
-export const addInput = (input: Input) => {
+const addInput = (input: Input) => {
   return axios.post('/inputs', input);
+};
+
+const updateInput = (input: Input) => {
+  return axios.put(`/inputs/${input.id}`, input);
 };
 
 export const useInputs = () => {
@@ -35,6 +39,27 @@ export const useAddInput = () => {
       addNotification({
         type: 'success',
         title: 'Log Input Added',
+      });
+    },
+  });
+};
+
+export const useChangeInputState = () => {
+  const { addNotification } = useNotificationStore();
+  const queryClient = useQueryClient();
+
+  return useMutation(updateInput, {
+    onError: () => {
+      addNotification({
+        type: 'error',
+        title: 'Failed to change input state',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries('inputs');
+      addNotification({
+        type: 'success',
+        title: 'Input started',
       });
     },
   });
