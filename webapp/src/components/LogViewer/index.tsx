@@ -2,6 +2,7 @@ import React from 'react';
 import { useInputs } from '../../api';
 import { Box } from '@chakra-ui/react';
 import { useLogs } from '../../api/logs';
+import LogEntry from './components/LogEntry';
 
 const LogViewer = () => {
   const inputs = useInputs();
@@ -15,10 +16,10 @@ const LogViewer = () => {
         ))}
       </ul>
 
-      <Box mt={2} bg={'gray.300'}>
+      <Box mt={2} bg={'gray.50'}>
         <ul>
           {logs?.data?.map((d) => (
-            <li key={d.id}>{`${d.timestamp} ${d.source} ${d.level}: ${d.message}`}</li>
+            <LogEntry key={d.id} entry={d} />
           ))}
         </ul>
       </Box>
