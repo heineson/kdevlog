@@ -1,5 +1,6 @@
 import React from 'react';
 import dayjs from 'dayjs';
+import { Td, Tr } from '@chakra-ui/react';
 import { LogEntry } from '../../../../api/types';
 import { useInputs } from '../../../../api';
 
@@ -15,7 +16,14 @@ const LogEntryComp = ({ entry }: LogEntryProps) => {
   const formattedTimestamp = formatTimestamp(entry.timestamp);
   const sourceName = inputs?.data?.find((input) => input.id === entry.source)?.value || entry.source;
 
-  return <li key={entry.id}>{`${formattedTimestamp} ${sourceName} ${entry.level}: ${entry.message}`}</li>;
+  return (
+    <Tr key={entry.id}>
+      <Td>{formattedTimestamp}</Td>
+      <Td>{sourceName}</Td>
+      <Td>{entry.level}</Td>
+      <Td>{entry.message}</Td>
+    </Tr>
+  );
 };
 
 export default LogEntryComp;
