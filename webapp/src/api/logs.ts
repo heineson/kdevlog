@@ -22,5 +22,6 @@ export const useLogs = () => {
   return useQuery<LogEntry[], Error>({
     queryKey: ['logs'],
     queryFn: () => getLogs({ count: 100 }),
+    refetchInterval: 10000,
   });
 };
